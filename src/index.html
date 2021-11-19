@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ru">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Учёт картриджей</title>
+    <script src="https://kit.fontawesome.com/df8fcd39d6.js" crossorigin="anonymous"></script>
+</head>
+
+<body>
+
+    <div id="wrapper">
+        <div class='wrapper'>
+            <header class="header">
+                <div class="brand">
+                    <a href="http://zabbix.bjtrade.lan">
+                        <img src="/assets/img/zabbix.png" alt="zabbix-logo">
+                    </a>
+                </div>
+                <div class="reload">
+                    <i class="fas fa-sync"></i>
+                </div>
+                <div class="prev">
+                    <i class="far fa-arrow-alt-circle-left"></i>
+                </div>
+                <h1 class='main-title'>Учёт картриджей</h1>
+                <div class='search-form'>
+                    <form id='search' class='form' autocomplete="off">
+                        <select class="select">
+							<option value="fio">Фамилия</option>
+							<option value="inv">Инвентарный номер</option>
+							<option value="model">Модель</option>
+						</select>
+                        <input type="text" name="value" class="input__text" autofocus>
+                        <ul id="autocomplete"></ul>
+
+                        <input type="radio" class="radio" name="stat" id="adobted" value="0" />
+                        <label for="adobted" class="radio__title">Принят</label>
+                        <input type="radio" class="radio" name="stat" id="given" value="1" />
+                        <label for="given" class="radio__title">Выдан</label>
+                        <button class='btn' type='submit'>Отправить</button>
+                    </form>
+                    <button class='btn btn-stat'>Статистика</button>
+                    <button class="btn btn-printlogs">Статистика Принтеров</button>
+                    <button class="btn btn-delivery">Отдел Доставки</button>
+                </div>
+                <div class="statistic-form">
+                    <div class='statistic'>
+                        <input type="radio" name="stat" class="radio_stat" id="received" value="0" checked>
+                        <label for='received' class='radio__title'>Принято</label>
+                        <input type="radio" name="stat" class="radio_stat" id="fillup" value="3">
+                        <label for='fillup' class='radio__title'>На заправке</label>
+                        <input type="radio" name="stat" class="radio_stat" id="onstorage" value="2">
+                        <label for='onstorage' class='radio__title'>На складе</label>
+                        <!--<input type="radio" name="stat" value="4" /><span>Списан</span>
+                        <input type="radio" name="stat" value="5" /><span>Сломан</span>-->
+                        <!-- <button class='btn' type="submit">Отправить</button> -->
+                        <span class="amount-rows">Всего: <span class='amount-number'></span>
+                    </div>
+                </div>
+                <div class="printers-form">
+                    <form class="printlogs__form">
+                        <select class="printers-select">
+							<option value="department">Отдел</option>
+							<option value="hostname">Имя хоста</option>
+							<option value="ip">IP адрес</option>
+							<option value="type">Тип устройства</option>
+                        </select>
+                        <input type="text" name="value" class="input__text input__text-printers" autofocus>
+                        <button class='btn' type='submit'>Отправить</button>
+                    </form>
+                </div>
+                <div class="delivery-form"></div>
+            </header>
+        </div>
+        <div class="wrapper">
+            <div class="preloader">
+                <div class="preloader-item">
+                    <i class="fas fa-spinner"></i>
+                </div>
+            </div>
+            <table class="data-table">
+                <thead>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+            <div class='divErr'></div>
+
+            <div class='pagination-block'>
+                <ul class='pagination'>
+                    <!-- <li><span>&lt; Previous</span></li>
+                    <li class="pagination__item"><span>1</span></li>
+                    <li class="pagination__item"><span>2</span></li>
+                    <li class="pagination__item pagination__dots"><span>...</span></li>
+                    <li class="pagination__item"><span>5</span></li>
+                    <li class="pagination__item pagination__item-active"><span>6</span></li>
+                    <li class="pagination__item"><span>7</span></li>
+                    <li class="pagination__item pagination__dots"><span>...</span></li>
+                    <li class="pagination__item"><span>9</span></li>
+                    <li class="pagination__item"><span>10</span></li>
+                    <li><span>Next &gt;</span></li> -->
+                </ul>
+            </div>
+        </div>
+        <div class='wrapper'>
+            <footer class='footer'>
+                <div class='credits'>
+                    <h4>cantwell &copy;
+                        <script>
+                            document.write(new Date().getFullYear());
+                        </script>
+                    </h4>
+                </div>
+            </footer>
+        </div>
+    </div>
+</body>
+
+</html>
