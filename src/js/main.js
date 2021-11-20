@@ -1,5 +1,6 @@
 import {constants} from './constants';
-//Функции для отрисовки таблицы 
+
+//==============================Функции для отрисовки таблицы================================ 
 //Для таблицы с картриджами
 const createCartridgesRow = (operation, idx) => {
     const row = document.createElement('tr');
@@ -26,16 +27,18 @@ const createsStatisticsRow = (operation, idx) => {
     `;
     tableBody.append(row);
 }
+
 //Для отрисовки таблицы принтеров
 const createPrintersRow = (operation, idx) => {
     if (operation.ip) {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td class="align">${idx + 1}</td>
-            <td>${operation.ltime.replace('T', ' ')}</td>
             <td>${operation.description}</td>
-            <td>${operation.model}</td>
             <td>${operation.type}</td>
+            <td>${operation.model}</td>
+            <td>${getDate(operation.ftime)}</td>
+            <td>${getDate(operation.ltime)}</td>
             <td>${operation.inv}</td>
             <td><a class="print-link" href="http://${operation.ip}" target="_blank">${operation.hostname}</td>
             <td>${operation.total}</td>
@@ -51,8 +54,8 @@ const createDeliveryRow = (operation, idx) => {
             <td class="align">${idx + 1}</td>
             <td>${ getImg(operation.vendor) }</td>
             <td>${operation.model}</td>
-            <td>${operation.ftime.replace('T', ' ')}</td>
-            <td>${operation.ltime.replace('T', ' ')}</td>
+            <td>${getDate(operation.ftime)}</td>
+            <td>${getDate(operation.ltime)}</td>
             <td>${operation.inv}</td>
             <td><a class="print-link" href="http://${operation.ip}" target="_blank">${operation.hostname}</td>
             <td class="align"><button class="btn-state" data-ip="http://${operation.ip}">Offline</button></td>
@@ -61,7 +64,7 @@ const createDeliveryRow = (operation, idx) => {
     tableBody.append(row);
 }
 
-//Получаем элементы
+//===================================Получаем элементы=======================================
 const table = document.querySelector('.data-table'),
     tableHead = table.querySelector('thead'),
     tableBody = table.querySelector('tbody'),
@@ -81,15 +84,10 @@ const searchForm = document.getElementById('search'),
     radioBtns = document.querySelectorAll(' input[type=radio] '),
     prevDiv = document.querySelector('.prev'), //Сбросить выборку
     reloadDiv = document.querySelector('.reload'); //Сброс поиска
-let stat = null,
-    idx = -1,
-    statValue = '';
 
 //Статистика по картриджам
 const btnStat = document.querySelector('.btn-stat'),
-    mainTitle = document.querySelector('.main-title');
-let dataStat = [],
-    selectStatData = [],
+    mainTitle = document.querySelector('.main-title'),
     amountNumber = document.querySelector('.amount-number');
 
 //Статистика по принтерам
@@ -98,14 +96,12 @@ const btnPrintlogs = document.querySelector('.btn-printlogs'),
     printlogsForm = document.querySelector('.printlogs__form'),
     inputTextPrinters = document.querySelector('.input__text-printers'),
     printersSelect = document.querySelector('.printers-select');
-let dataPrinters = [],
-    selectPrinters = [];
 
 //Статистика Доставки
 const btnDelivery = document.querySelector('.btn-delivery'),
     deliveryForm = document.querySelector('.delivery-form');
 
-//Основные переменные для работы приложения
+//==========================Основные переменные для работы приложения======================
 
 //URL для получения данных, по умолчанию опрашивает картриджи
 let apiURL = constants.API_CART_LOGS;
@@ -120,7 +116,12 @@ let dataCartridges = [],
     dataNames = [],
     dataMatch = [];
 
-    //Функция для получения данных через AJAX
+let stat = null,
+    idx = -1,
+    statValue = '';
+
+
+//==================Функция для получения данных через AJAX==================================
     const getData = async(url) => {
         preloader.classList.add('show');
         const response = await fetch(url);
@@ -137,25 +138,20 @@ let dataCartridges = [],
         }
     }
 
-//Автоподстановка, получаем все ФИО пользоватлей
-getData(constants.API_USERS)
-    .then(({items}) => items.forEach( item => dataNames.push(item.fullname) ))
-    .catch(err => console.log(err.stack));
-//Получение все модели картриджей    
-getData(constants.API_CARTRIDGES)
-    .then(({items}) => {
-        const tempArr = [];
-        items.forEach( item => tempArr.push(item.model));
-        dataCartridges = Array.from( new Set(tempArr));
-    })
-    .catch(err => console.log(err.stack));
-//Каждые 5 минут переполучаем данные из БД
-setInterval(() => {
-    resetAll();
-    buildPagination();
-}, 600000);
-
 //======================================Пагинация=================================================================
+
+//Отрисовка таблицы
+const showTable = (data, currentPage, tableHeaders, createItemsRow, linesCount) => {
+    let tail = linesCount * currentPage; //получаем конечную границу записей
+    let head = tail - linesCount; //получаем начальную границу записей
+
+    tableHead.innerHTML = tableHeaders;
+
+    tableBody.textContent = '';     
+    for (let i = 0, j = head; i < data.length; i++, j++) {
+        createItemsRow(data[i], j);
+    }
+}
 
 function buildPagination (currentPage = 1) {
     // getData(getCartLogs(currentPage, linesCount))
@@ -234,10 +230,10 @@ function buildPagination (currentPage = 1) {
         return data;
     })
 };
-
+//Хак, чтобы можно было бы вешать данную функцию на html элементы пагинации
 window.buildPagination = buildPagination;
 
-//===============================================Функции===========================================================
+//===============================Функции Хелперы===========================================================
 
 //Функция управления клавишами
 const keyControl = (event, input, dropdown) => {
@@ -265,19 +261,6 @@ const keyControl = (event, input, dropdown) => {
     }
 }
 
-//Отрисовка таблицы
-const showTable = (data, currentPage, tableHeaders, createItemsRow, linesCount) => {
-    let tail = linesCount * currentPage; //получаем конечную границу записей
-    let head = tail - linesCount; //получаем начальную границу записей
-
-    tableHead.innerHTML = tableHeaders;
-
-    tableBody.textContent = '';     
-    for (let i = 0, j = head; i < data.length; i++, j++) {
-        createItemsRow(data[i], j);
-    }
-}
-
 //Получение статуса
 const getStatus = (num) => {
     switch (num) {
@@ -302,7 +285,18 @@ const getStatus = (num) => {
     }
 }
 
-//Доп. функция вывода картики бренда
+//Возвращение даты в нужном формате
+const getDate = function( dateString ){
+    //Добавляем 0 впереди если данные меньше 10
+    const appendZero = ( num ) => num < 10 ? '0' + num : num;
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = appendZero(date.getMonth() + 1);
+    const day = appendZero(date.getDate());
+    return `${year}-${month}-${day}`;
+}
+
+//Доп. функция вывода картинок бренда
 const getImg = brand => {
     if (brand === 'Kyocera') {
         return `<img src="../assets/img/kyocera.png" alt="${brand}">`;
@@ -323,6 +317,43 @@ const isOnline = async(btn, url) => {
     }
 }
 
+//Функция сортировки
+const getSort = ({ target }) => {
+    //Добавляем дата-аттрибут order либо 1, либо -1 - сортировка прямая или обратная
+    const order = (target.dataset.order = -(target.dataset.order || -1));
+    //Получаем номер индекса цели th
+    const index = [...target.parentNode.cells].indexOf(target);
+    //Создаем объект для сортировки который будет сортировать на русском и английском и цифры
+    const collator = new Intl.Collator(['en', 'ru'], { numeric: true });
+    //Функция сортировки которая получает индекс th и значение какую сортировку делать
+    const comparator = (index, order) => {
+
+        return (a, b) => {
+            //Сортируем значения ближайших tr'ов в столбце выбранных th
+            return order * collator.compare(
+                a.children[index].innerHTML,
+                b.children[index].innerHTML
+            )
+        }
+    }
+
+    //В цикле пробегаем по всем tr'ам и сравнивая ближайшие между собой
+    for (const tBody of target.closest('table').tBodies)
+        tBody.append(...[...tBody.rows].sort(comparator(index, order)));
+
+    //Пробегаем по всем th и на котором сработало событие устаналиваем класс sorted, а у других убераем
+    for (const cell of target.parentNode.cells)
+        cell.classList.toggle('sorted', cell === target);
+    //Перепробегаем по полю нумерации и выстраиваем всё по порядку
+    const bodyChildren = target.closest('table').tBodies[0].children;
+    const bodyChildrenArr = [...bodyChildren]
+    for (let i = 0; i < bodyChildrenArr.length; i++) {
+            bodyChildrenArr[i].cells[0].textContent = i+1;
+    }
+};
+
+//================================Функции приложения=========================================
+
 //Сброс всех полей
 const resetAll = () => {
     error.classList.remove('show');
@@ -335,6 +366,7 @@ const resetAll = () => {
     divStatForm.classList.remove('show');
     prevDiv.classList.remove('show');
     printersForm.classList.remove('show');
+    statValue = '';
     createItemsRow = createCartridgesRow;
     apiURL = constants.API_CART_LOGS;
     tableHeader = constants.TABLE_HEADER_CART_LOGS;
@@ -343,20 +375,6 @@ const resetAll = () => {
     inputText.style.borderColor = '';
     title.text = '';
     buildPagination();
-}
-
-//Обработка данных и либо их вывода, либо вывода ошибок
-const dataProcess = () => {
-    if (data.length) {
-        error.innerHTML = '';
-        buildPagination();
-        // setArray(data);
-        // pageChange();
-    } else {
-        tableBody.textContent = '';
-        pagContainer.textContent = '';
-        error.innerHTML = `<p class='error'>По запросу нет данных</p>`;
-    }
 }
 
 //Замена форм
@@ -369,14 +387,21 @@ const changeForm = (form, header) => {
 
 //==============================События========================================================//
 
-//Событие обработки формы
+//События обработки формы
+
+//Событие для получения значения value у отмеченной радиокнопки
+searchForm.addEventListener('click', event => {
+    let target = event.target;
+    if (target.tagName === 'INPUT' && target.type === 'radio')
+        statValue = target.value;
+})
+
 searchForm.addEventListener('submit', event => {
     event.preventDefault();
     const status = statValue;
 
     if (inputText.value) {
         inputText.style.borderColor = ''; //убираем красную границу
-        console.log('status', status);
         prevDiv.classList.add('show'); //выводим кнопку назад
         preloader.classList.add('show');
         apiURL = constants.API_CART_LOGS + `${select.value}=${inputText.value}&status=${status}&`; 
@@ -396,19 +421,6 @@ searchForm.addEventListener('submit', event => {
     }
 
     inputText.value = '';
-});
-
-//Событие для получения значения value у отмеченной радиокнопки
-searchForm.addEventListener('click', event => {
-    let target = event.target;
-    if (target.tagName === 'INPUT' && target.type === 'radio')
-        statValue = target.value;
-})
-
-//Событие для обработки нажатия по кнопке "назад"
-prevDiv.addEventListener('click', () => {
-    resetAll();
-    buildPagination();
 });
 
 //События при вводе символов в инпут и выводе li-шек с подсказками
@@ -436,6 +448,22 @@ inputText.addEventListener("input", event => {
     }
 });
 
+//События для работы с кнопками
+
+//Событие для обработки нажатия по кнопке "назад"
+prevDiv.addEventListener('click', () => {
+    resetAll();
+    buildPagination();
+});
+
+//Сбросить данные по результатам сортировки после формы
+reloadDiv.addEventListener('click', event => {
+    prevDiv.classList.add('show');
+    reloadDiv.classList.remove('show');
+    apiURL = constants.API_PRINT_LOGS;
+    buildPagination();
+})
+
 //Обработка нажатия клавиш
 document.addEventListener('keydown', event => {
     if (event.keyCode === 40 || event.keyCode === 38 || event.keyCode === 13) {
@@ -445,46 +473,21 @@ document.addEventListener('keydown', event => {
     }
 });
 
-//Сортировка таблицы
-    //Функция сортировки
-    const getSort = ({ target }) => {
-        //Добавляем дата-аттрибут order либо 1, либо -1 - сортировка прямая или обратная
-        const order = (target.dataset.order = -(target.dataset.order || -1));
-        //Получаем номер индекса цели th
-        const index = [...target.parentNode.cells].indexOf(target);
-        //Создаем объект для сортировки который будет сортировать на русском и английском и цифры
-        const collator = new Intl.Collator(['en', 'ru'], { numeric: true });
-        //Функция сортировки которая получает индекс th и значение какую сортировку делать
-        const comparator = (index, order) => {
+//Обработка нажатий по списку с автоподстановкой 
+autoComplete.addEventListener( 'click', event => {
+    const target = event.target;
+    const currentTarget = event.currentTarget;
+    //При клике по элементу получем текстовое значения этого элемент и подставляем в поле input 
+    inputText.value = target.textContent;
+    currentTarget.textContent = '';
+})
 
-            return (a, b) => {
-                //Сортируем значения ближайших tr'ов в столбце выбранных th
-                return order * collator.compare(
-                    a.children[index].innerHTML,
-                    b.children[index].innerHTML
-                )
-            }
-        }
+//Вещаем событие на thead для сортировки полей
+document.querySelectorAll('.data-table thead').forEach(tableTH => tableTH.addEventListener('click', () => getSort(event)));
 
-        //В цикле пробегаем по всем tr'ам и сравнивая ближайшие между собой
-        for (const tBody of target.closest('table').tBodies)
-            tBody.append(...[...tBody.rows].sort(comparator(index, order)));
+//=========================Смена страницы=========================================================//
 
-        //Пробегаем по всем th и на котором сработало событие устаналиваем класс sorted, а у других убераем
-        for (const cell of target.parentNode.cells)
-            cell.classList.toggle('sorted', cell === target);
-        //Перепробегаем по полю нумерации и выстраиваем всё по порядку
-        const bodyChildren = target.closest('table').tBodies[0].children;
-        const bodyChildrenArr = [...bodyChildren]
-        for (let i = 0; i < bodyChildrenArr.length; i++) {
-                bodyChildrenArr[i].cells[0].textContent = i+1;
-        }
-    };
-    //Вещаем событие thead передавая
-    document.querySelectorAll('.data-table thead').forEach(tableTH => tableTH.addEventListener('click', () => getSort(event)));
-
-//=======================================Статистика=========================================================//
-
+//Страница Статистики
 btnStat.addEventListener('click', () => {
     changeForm(divStatForm, 'На заправке');
     title.text = 'Статистика';
@@ -505,7 +508,6 @@ statForm.addEventListener('click', event => {
     }
 })
 
-//===================================Printlogs==================================================
 
 //Отрисовка таблицы для со статистикой принтеров по кнопке
 btnPrintlogs.addEventListener('click', event => {
@@ -527,37 +529,25 @@ printlogsForm.addEventListener('submit', event => {
         inputTextPrinters.style.borderColor = '';
         prevDiv.classList.remove('show');
         reloadDiv.classList.add('show');
-        switch (printersSelect.value) {
-            case 'department':
-                selectPrinters = dataPrinters.filter(data => data.descr === inputTextPrinters.value);
-                break;
-            case 'hostname':
-                selectPrinters = dataPrinters.filter(data => data.host_name === inputTextPrinters.value);
-                break;
-            case 'ip':
-                selectPrinters = dataPrinters.filter(data => data.ipv4 === inputTextPrinters.value);
-                break;
-            case 'type':
-                selectPrinters = dataPrinters.filter(data => data.name === inputTextPrinters.value);
-                break;
-        }
-        renderPrintTable(selectPrinters);
+        apiURL = constants.API_PRINT_LOGS + `${printersSelect.value}=${inputTextPrinters.value}&`; 
+        createItemsRow = createPrintersRow;
+        tableHeader = constants.TABLE_HEADER_PRINT_LOGS;
+        error.innerHTML = '';
+        buildPagination()
+        .then( ({items}) => {
+            if(!items.length){
+                tableBody.textContent = '';
+                pagContainer.textContent = '';
+                error.innerHTML = `<p class='error'>По запросу нет данных</p>`;
+            }
+        })
         inputTextPrinters.value = '';
     } else {
         inputTextPrinters.style.borderColor = 'red';
     }
 })
 
-
-
-//Сбросить данные по результатам сортировки после формы
-reloadDiv.addEventListener('click', event => {
-    prevDiv.classList.add('show');
-    reloadDiv.classList.remove('show');
-    renderPrintTable(dataPrinters);
-})
-
-//=====================================Delivery============================================================
+//Отображения страницы с принтерами Доставки
 btnDelivery.addEventListener('click', event => {
     event.preventDefault();
     changeForm(deliveryForm, 'Отдел Доставки');
@@ -576,4 +566,24 @@ btnDelivery.addEventListener('click', event => {
     })
 })
 
+//Автоподстановка, получаем все ФИО пользователей
+getData(constants.API_USERS)
+    .then(({items}) => items.forEach( item => dataNames.push(item.fullname) ))
+    .catch(err => console.log(err.stack));
+//Получение все модели картриджей    
+getData(constants.API_CARTRIDGES)
+    .then(({items}) => {
+        const tempArr = [];
+        items.forEach( item => tempArr.push(item.model));
+        dataCartridges = Array.from( new Set(tempArr));
+    })
+    .catch(err => console.log(err.stack));
+
+//Каждые 5 минут переполучаем данные из БД
+setInterval(() => {
+    resetAll();
+    buildPagination();
+}, 600000);
+
+//Первоначальное отображение
 buildPagination();
