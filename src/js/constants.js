@@ -1,6 +1,6 @@
 //API константы
 const constants = {
-    //Констаны для работаы с API
+    //Константы для работы с API
     API_CART_LOGS: 'http://10.1.1.141:8080/api/cartlogs/journal?',
     API_PRINT_LOGS: 'http://10.1.1.141:8080/api/printlogs/prints?',
     API_USERS: 'http://10.1.1.141:8080/api/cartlogs/users',

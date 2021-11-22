@@ -114,6 +114,7 @@ const linesCount = 20;
 //массивы для работы с данными
 let dataCartridges = [],
     dataNames = [],
+    dataHostnames = [],
     dataMatch = [];
 
 let stat = null,
@@ -352,6 +353,31 @@ const getSort = ({ target }) => {
     }
 };
 
+//Получения всех пользователей
+const getAllUsers = ({items}) => {
+    const array = [];
+    items.forEach( (item) => array.push(item.fullname));
+    return array;
+}
+//Получение всех моделей картриджей
+const getAllCartridges = ({items}) => {
+    const array = [];
+    items.forEach( item => array.push(item.model));
+    return Array.from( new Set(array));
+}
+//Получение всех хостнеймов принтеров
+const getAllHostnames = ({items}) => {
+    const set = new Set();
+    items.forEach(item => set.add(item.hostname))
+    return Array.from(set);
+}
+
+//Получение нужных данных для автоподстановки
+async function saveItemsArray(url, callback){
+    const data = await getData(url)
+    return callback(data);
+}
+
 //================================Функции приложения=========================================
 
 //Сброс всех полей
@@ -425,7 +451,6 @@ searchForm.addEventListener('submit', event => {
 
 //События при вводе символов в инпут и выводе li-шек с подсказками
 inputText.addEventListener("input", event => {
-
     if (inputText.value == '') {
         autoComplete.textContent = '';
     } else {
@@ -566,18 +591,16 @@ btnDelivery.addEventListener('click', event => {
     })
 })
 
-//Автоподстановка, получаем все ФИО пользователей
-getData(constants.API_USERS)
-    .then(({items}) => items.forEach( item => dataNames.push(item.fullname) ))
-    .catch(err => console.log(err.stack));
+//Данные для автоподстановка 
+
+//получаем все ФИО пользователей
+saveItemsArray(constants.API_USERS, getAllUsers).then( items => dataNames = items);
+
 //Получение все модели картриджей    
-getData(constants.API_CARTRIDGES)
-    .then(({items}) => {
-        const tempArr = [];
-        items.forEach( item => tempArr.push(item.model));
-        dataCartridges = Array.from( new Set(tempArr));
-    })
-    .catch(err => console.log(err.stack));
+saveItemsArray(constants.API_CARTRIDGES, getAllCartridges).then( items => dataCartridges = items );
+
+//Получение всех хостов
+saveItemsArray(constants.API_PRINT_LOGS, getAllHostnames).then( items => dataHostnames = items );
 
 //Каждые 5 минут переполучаем данные из БД
 setInterval(() => {
