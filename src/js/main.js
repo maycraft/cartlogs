@@ -1,5 +1,41 @@
 import {constants} from './constants';
 
+//===================================Получаем элементы=======================================
+const table = document.querySelector('.data-table'),
+    tableHead = table.querySelector('thead'),
+    tableBody = table.querySelector('tbody'),
+    error = document.querySelector('.divErr'),
+    pagContainer = document.querySelector('.pagination'),
+    divSearchForm = document.querySelector('.search-form'),
+    divStatForm = document.querySelector('.statistic-form'),
+    preloader = document.querySelector('.preloader '),
+    title = document.querySelector('title');
+
+//работа с формой
+const searchForm = document.getElementById('search'),
+    statForm = document.querySelector('.statistic'),
+    inputText = document.querySelector('.input__text'),
+    select = document.querySelector('.select'),
+    autoComplete = document.getElementById('autocomplete'),
+    prevDiv = document.querySelector('.prev'), //Сбросить выборку
+    reloadDiv = document.querySelector('.reload'); //Сброс поиска
+
+//Статистика по картриджам
+const btnStat = document.querySelector('.btn-stat'),
+    mainTitle = document.querySelector('.main-title'),
+    amountNumber = document.querySelector('.amount-number');
+
+//Статистика по принтерам
+const btnPrintlogs = document.querySelector('.btn-printlogs'),
+    printersForm = document.querySelector('.printers-form'),
+    printlogsForm = document.querySelector('.printlogs__form'),
+    inputTextPrinters = document.querySelector('.input__text-printers'),
+    printersSelect = document.querySelector('.printers-select');
+
+//Статистика Доставки
+const btnDelivery = document.querySelector('.btn-delivery'),
+    deliveryForm = document.querySelector('.delivery-form');
+
 //==============================Функции для отрисовки таблицы================================ 
 //Для таблицы с картриджами
 const createCartridgesRow = (operation, idx) => {
@@ -64,43 +100,6 @@ const createDeliveryRow = (operation, idx) => {
     tableBody.append(row);
 }
 
-//===================================Получаем элементы=======================================
-const table = document.querySelector('.data-table'),
-    tableHead = table.querySelector('thead'),
-    tableBody = table.querySelector('tbody'),
-    error = document.querySelector('.divErr'),
-    pagContainer = document.querySelector('.pagination'),
-    divSearchForm = document.querySelector('.search-form'),
-    divStatForm = document.querySelector('.statistic-form'),
-    preloader = document.querySelector('.preloader '),
-    title = document.querySelector('title');
-
-//работа с формой
-const searchForm = document.getElementById('search'),
-    statForm = document.querySelector('.statistic'),
-    inputText = document.querySelector('.input__text'),
-    select = document.querySelector('.select'),
-    autoComplete = document.getElementById('autocomplete'),
-    radioBtns = document.querySelectorAll(' input[type=radio] '),
-    prevDiv = document.querySelector('.prev'), //Сбросить выборку
-    reloadDiv = document.querySelector('.reload'); //Сброс поиска
-
-//Статистика по картриджам
-const btnStat = document.querySelector('.btn-stat'),
-    mainTitle = document.querySelector('.main-title'),
-    amountNumber = document.querySelector('.amount-number');
-
-//Статистика по принтерам
-const btnPrintlogs = document.querySelector('.btn-printlogs'),
-    printersForm = document.querySelector('.printers-form'),
-    printlogsForm = document.querySelector('.printlogs__form'),
-    inputTextPrinters = document.querySelector('.input__text-printers'),
-    printersSelect = document.querySelector('.printers-select');
-
-//Статистика Доставки
-const btnDelivery = document.querySelector('.btn-delivery'),
-    deliveryForm = document.querySelector('.delivery-form');
-
 //==========================Основные переменные для работы приложения======================
 
 //URL для получения данных, по умолчанию опрашивает картриджи
@@ -117,11 +116,12 @@ let dataCartridges = [],
     dataHostnames = [],
     dataMatch = [];
 
-let stat = null,
-    idx = -1,
+let idx = -1,
     statValue = '',
     activeInput = inputText;
 
+//Устанавливаем переменную времени для отчёта до обновления данных
+let time = new Date().getTime();
 
 //==================Функция для получения данных через AJAX==================================
 const getData = async(url) => {
@@ -300,11 +300,11 @@ const getDate = function( dateString ){
 
 //Доп. функция вывода картинок бренда
 const getImg = brand => {
-    if (brand === 'Kyocera') {
-        return `<img src="../assets/img/kyocera.png" alt="${brand}">`;
-    } else {
-        return `<img src="../assets/img/hp.png" alt="${brand}">`;
-    }
+    return `<img src="../assets/img/${brand}.png" alt="${brand}">`;
+    // if (brand === 'Kyocera') {
+    // } else {
+    //     return `<img src="../assets/img/hp.png" alt="${brand}">`;
+    // }
 }
 
 //Доп функция получения состояния принтеров
@@ -377,6 +377,11 @@ const getAllHostnames = ({items}) => {
 async function saveItemsArray(url, callback){
     const data = await getData(url)
     return callback(data);
+}
+
+//Получение текущих данных о времени
+const setCurrentTime = () => {
+    time = new Date().getTime();
 }
 
 //================================Функции приложения=========================================
@@ -534,6 +539,9 @@ autoComplete.addEventListener( 'click', event => {
 //Вещаем событие на thead для сортировки полей
 document.querySelectorAll('.data-table thead').forEach(tableTH => tableTH.addEventListener('click', () => getSort(event)));
 
+document.body.addEventListener('mousemove', setCurrentTime);
+document.body.addEventListener('keydown', setCurrentTime);
+
 //=========================Смена страницы=========================================================//
 
 //Страница Статистики
@@ -615,7 +623,7 @@ btnDelivery.addEventListener('click', event => {
     })
 })
 
-//Данные для автоподстановка 
+//==================================Данные для автоподстановки================================ 
 
 //получаем все ФИО пользователей
 saveItemsArray(constants.API_USERS, getAllUsers).then( items => dataNames = items);
@@ -626,10 +634,13 @@ saveItemsArray(constants.API_CARTRIDGES, getAllCartridges).then( items => dataCa
 //Получение всех хостов
 saveItemsArray(constants.API_PRINT_LOGS, getAllHostnames).then( items => dataHostnames = items );
 
-//Каждые 5 минут переполучаем данные из БД
-// setInterval(() => {
-//     resetAll();
-//     buildPagination();
-// }, 600000);
+//Каждые 10 минут переполучаем данные из БД
+setInterval( () => {
+    if( new Date().getTime() - time >= 600000 ){
+        resetAll();
+        buildPagination();
+    }
+}, 180000)
+
 //Первоначальное отображение
 buildPagination();
