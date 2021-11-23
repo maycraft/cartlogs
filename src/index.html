@@ -34,8 +34,7 @@
 							<option value="model">Модель</option>
 						</select>
                         <input type="text" name="value" class="input__text" autofocus>
-                        <ul id="autocomplete"></ul>
-
+                        <!-- <ul id="autocomplete"></ul> -->
                         <input type="radio" class="radio" name="stat" id="adobted" value="0" />
                         <label for="adobted" class="radio__title">Принят</label>
                         <input type="radio" class="radio" name="stat" id="given" value="1" />
@@ -58,7 +57,7 @@
                     </div>
                 </div>
                 <div class="printers-form">
-                    <form class="printlogs__form">
+                    <form class="printlogs__form" autocomplete="off">
                         <select class="printers-select">
 							<option value="description">Отдел</option>
 							<option value="hostname">Имя хоста</option>
@@ -69,6 +68,7 @@
                         <button class='btn' type='submit'>Отправить</button>
                     </form>
                 </div>
+                <ul id="autocomplete"></ul>
                 <div class="delivery-form"></div>
             </header>
         </div>

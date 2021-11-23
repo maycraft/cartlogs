@@ -163,6 +163,7 @@
         padding-bottom: 0.1em;
         background-color: #2B2B2B;
         color: #D0CBB5;
+        width: 150px;
     }
 
     .calendar {
@@ -180,7 +181,7 @@
         background-color: #59DB8F;
         color: black;
         position: absolute;
-        top: 1.4rem;
+        /* top: 1.4rem; */
         left: 9.6rem;
         list-style-type: none;
         padding-left: 5px;

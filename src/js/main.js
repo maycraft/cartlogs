@@ -119,25 +119,26 @@ let dataCartridges = [],
 
 let stat = null,
     idx = -1,
-    statValue = '';
+    statValue = '',
+    activeInput = inputText;
 
 
 //==================Функция для получения данных через AJAX==================================
-    const getData = async(url) => {
-        preloader.classList.add('show');
-        const response = await fetch(url);
+const getData = async(url) => {
+    preloader.classList.add('show');
+    const response = await fetch(url);
 
-        if (response.ok) {
-            return response.json();
-        } else {
-            const errMsg = document.createElement('p');
-            errMsg.classList.add('error');
-            error.classList.add('show');
-            errMsg.textContent = 'Проблемы на сервере';
-            error.append(errMsg);
-            throw new Error(`Ошибка получение данных от '${url}' со статусом ${response.statusText}`);
-        }
+    if (response.ok) {
+        return response.json();
+    } else {
+        const errMsg = document.createElement('p');
+        errMsg.classList.add('error');
+        error.classList.add('show');
+        errMsg.textContent = 'Проблемы на сервере';
+        error.append(errMsg);
+        throw new Error(`Ошибка получение данных от '${url}' со статусом ${response.statusText}`);
     }
+}
 
 //======================================Пагинация=================================================================
 
@@ -387,6 +388,7 @@ const resetAll = () => {
     pagContainer.style.display = '';
     error.textContent = '';
     searchForm.reset();
+    activeInput = inputText;
     mainTitle.textContent = 'Учёт картриджей';
     divSearchForm.classList.remove('hide');
     divStatForm.classList.remove('show');
@@ -426,8 +428,8 @@ searchForm.addEventListener('submit', event => {
     event.preventDefault();
     const status = statValue;
 
-    if (inputText.value) {
-        inputText.style.borderColor = ''; //убираем красную границу
+    if (activeInput.value) {
+        activeInput.style.borderColor = ''; //убираем красную границу
         prevDiv.classList.add('show'); //выводим кнопку назад
         preloader.classList.add('show');
         apiURL = constants.API_CART_LOGS + `${select.value}=${inputText.value}&status=${status}&`; 
@@ -443,15 +445,24 @@ searchForm.addEventListener('submit', event => {
             }
         })
     } else {
-        inputText.style.borderColor = 'red';
+        activeInput.style.borderColor = 'red';
     }
 
-    inputText.value = '';
+    activeInput.value = '';
 });
 
-//События при вводе символов в инпут и выводе li-шек с подсказками
-inputText.addEventListener("input", event => {
-    if (inputText.value == '') {
+const renderAutocomplete = (dataItems, input) => {
+    dataMatch = dataItems.filter(item => item.toLowerCase().startsWith(input.value.toLowerCase()));
+    let itemsString = '';
+    for (let i = 0; i < dataMatch.length; i++) {
+        if (i == 15) break;
+        itemsString += `<li class='list'>${dataMatch[i]}</li>`;
+    }
+    return itemsString;
+}
+
+const cartridgesFormHandler = ({currentTarget}) => {
+    if (currentTarget.value == '') {
         autoComplete.textContent = '';
     } else {
         let dataItems = []; 
@@ -461,17 +472,30 @@ inputText.addEventListener("input", event => {
         if( select.value === 'model' ){
             dataItems = dataCartridges;
         }
-
-        dataMatch = dataItems.filter(item => item.toLowerCase().startsWith(inputText.value.toLowerCase()));
-        let nameString = '';
-        for (let i = 0; i < dataMatch.length; i++) {
-            if (i == 15) break;
-            nameString += `<li class='list'>${dataMatch[i]}</li>`;
-        }
-        autoComplete.innerHTML = nameString;
+        autoComplete.innerHTML = renderAutocomplete(dataItems, currentTarget);
         idx = -1;
     }
-});
+}
+
+const printersFormHandler = ({currentTarget}) => {
+    if (currentTarget.value == '') {
+        autoComplete.textContent = '';
+    } else {
+        let dataItems = []; 
+        if( printersSelect.value === 'hostname' ){
+            dataItems = dataHostnames;
+        }
+        // if( printersSelect.value === 'model' ){
+        //     dataItems = dataCartridges;
+        // }
+        autoComplete.innerHTML = renderAutocomplete(dataItems, currentTarget);
+        idx = -1;
+    }
+}
+//События при вводе символов в инпут и выводе li-шек с подсказками
+inputText.addEventListener("input", cartridgesFormHandler);
+
+inputTextPrinters.addEventListener('input', printersFormHandler);
 
 //События для работы с кнопками
 
@@ -493,7 +517,7 @@ reloadDiv.addEventListener('click', event => {
 document.addEventListener('keydown', event => {
     if (event.keyCode === 40 || event.keyCode === 38 || event.keyCode === 13) {
         if (dataMatch.length) {
-            keyControl(event, inputText, autoComplete);
+            keyControl(event, activeInput, autoComplete);
         }
     }
 });
@@ -503,7 +527,7 @@ autoComplete.addEventListener( 'click', event => {
     const target = event.target;
     const currentTarget = event.currentTarget;
     //При клике по элементу получем текстовое значения этого элемент и подставляем в поле input 
-    inputText.value = target.textContent;
+    activeInput.value = target.textContent;
     currentTarget.textContent = '';
 })
 
@@ -533,7 +557,6 @@ statForm.addEventListener('click', event => {
     }
 })
 
-
 //Отрисовка таблицы для со статистикой принтеров по кнопке
 btnPrintlogs.addEventListener('click', event => {
     event.preventDefault();
@@ -552,6 +575,7 @@ printlogsForm.addEventListener('submit', event => {
     event.preventDefault();
     if (inputTextPrinters.value) {
         inputTextPrinters.style.borderColor = '';
+        activeInput = inputTextPrinters;
         prevDiv.classList.remove('show');
         reloadDiv.classList.add('show');
         apiURL = constants.API_PRINT_LOGS + `${printersSelect.value}=${inputTextPrinters.value}&`; 
@@ -603,10 +627,9 @@ saveItemsArray(constants.API_CARTRIDGES, getAllCartridges).then( items => dataCa
 saveItemsArray(constants.API_PRINT_LOGS, getAllHostnames).then( items => dataHostnames = items );
 
 //Каждые 5 минут переполучаем данные из БД
-setInterval(() => {
-    resetAll();
-    buildPagination();
-}, 600000);
-
+// setInterval(() => {
+//     resetAll();
+//     buildPagination();
+// }, 600000);
 //Первоначальное отображение
 buildPagination();
