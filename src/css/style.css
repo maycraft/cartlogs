@@ -107,7 +107,7 @@
         display: none;
         position: absolute;
         font-size: 1.5em;
-        top: 7px;
+        top: 5px;
         right: 10px;
     }
 
@@ -120,15 +120,23 @@
     }
 
     .fa-arrow-alt-circle-left {
-        color: #D0BA9A;
-        font-size: 1.2em;
+        width: 29px;
+        height: 29px;
         cursor: pointer;
     }
 
+    .fa-arrow-alt-circle-left path {
+        fill: #D0BA9A;
+    }
+
     .fa-sync {
-        color: #D0BA9A;
-        /* display: none; */
+        width: 25px;
+        height: 25px;
         cursor: pointer;
+    }
+
+    .fa-sync path {
+        fill: #D0BA9A;
     }
 
     .logo {
@@ -432,13 +440,18 @@
     .fa-spinner {
         font-weight: 900;
         color: #ffffff;
-        font-size: 10rem;
+        width: 200px;
+        height: 200px;
         position: absolute;
         top: 50%;
         left: 50%;
         margin-left: -80px;
         margin-top: -80px;
         animation: rolling 1.2s infinite linear;
+    }
+
+    .fa-spinner path {
+        fill: #ffffff;
     }
 
     @keyframes rolling {
