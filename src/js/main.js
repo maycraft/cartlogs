@@ -114,9 +114,10 @@ const linesCount = 20;
 let dataCartridges = [],
     dataNames = [],
     dataHostnames = [],
+    dataDepartments = [],
     dataMatch = [];
 
-let idx = -1,
+let idxAutocomplete = -1,
     statValue = '',
     activeInput = inputText;
 
@@ -244,21 +245,21 @@ const keyControl = (event, input, dropdown) => {
 
     switch (event.keyCode) {
         case 38: //стрелка в вверх
-            if (idx >= 0)
-                Lis.item(idx).classList.remove('active');
-            idx--;
-            if (idx < 0) idx = length;
-            Lis.item(idx).classList.add('active');
+            if (idxAutocomplete >= 0)
+                Lis.item(idxAutocomplete).classList.remove('active');
+            idxAutocomplete--;
+            if (idxAutocomplete < 0) idxAutocomplete = length;
+            Lis.item(idxAutocomplete).classList.add('active');
             break;
         case 40: //стрелка вниз
-            if (idx >= 0)
-                Lis.item(idx).classList.remove('active');
-            idx++;
-            if (idx > length) idx = 0;
-            Lis.item(idx).classList.add('active');
+            if (idxAutocomplete >= 0)
+                Lis.item(idxAutocomplete).classList.remove('active');
+            idxAutocomplete++;
+            if (idxAutocomplete > length) idxAutocomplete = 0;
+            Lis.item(idxAutocomplete).classList.add('active');
             break;
         case 13: //код Enter
-            input.value = Lis.item(idx).textContent;
+            input.value = Lis.item(idxAutocomplete).textContent;
             dropdown.textContent = '';
     }
 }
@@ -299,13 +300,7 @@ const getDate = function( dateString ){
 }
 
 //Доп. функция вывода картинок бренда
-const getImg = brand => {
-    return `<img src="../assets/img/${brand}.png" alt="${brand}">`;
-    // if (brand === 'Kyocera') {
-    // } else {
-    //     return `<img src="../assets/img/hp.png" alt="${brand}">`;
-    // }
-}
+const getImg = brand => `<img src="../assets/img/${brand}.png" alt="${brand}">`;
 
 //Доп функция получения состояния принтеров
 const isOnline = async(btn, url) => {
@@ -373,6 +368,12 @@ const getAllHostnames = ({items}) => {
     return Array.from(set);
 }
 
+const getAllDepartment = ({items}) => {
+    const set = new Set();
+    items.forEach( item => set.add( item.description.split(' -')[0]));
+    return Array.from(set);
+}
+
 //Получение нужных данных для автоподстановки
 async function saveItemsArray(url, callback){
     const data = await getData(url)
@@ -418,6 +419,16 @@ const changeForm = (form, header) => {
     form.classList.add('show');
 }
 
+//Обновление данных с базы каждые 5 минут
+const refresh = () => {
+    if( new Date().getTime() - time >= 300000 ){
+        console.log('refresh', new Date().toTimeString());
+        resetAll();
+        buildPagination();
+    }
+    setTimeout( refresh, 60000);
+}
+
 //==============================События========================================================//
 
 //События обработки формы
@@ -431,13 +442,15 @@ searchForm.addEventListener('click', event => {
 
 searchForm.addEventListener('submit', event => {
     event.preventDefault();
+
     const status = statValue;
 
     if (activeInput.value) {
+        console.log(activeInput.value);
         activeInput.style.borderColor = ''; //убираем красную границу
         prevDiv.classList.add('show'); //выводим кнопку назад
         preloader.classList.add('show');
-        apiURL = constants.API_CART_LOGS + `${select.value}=${inputText.value}&status=${status}&`; 
+        apiURL = constants.API_CART_LOGS + `${select.value}=${activeInput.value}&status=${status}&`; 
         createItemsRow = createCartridgesRow;
         tableHeader = constants.TABLE_HEADER_CART_LOGS;
         error.innerHTML = '';
@@ -456,6 +469,33 @@ searchForm.addEventListener('submit', event => {
     activeInput.value = '';
 });
 
+//Обработка формы для статистики по принтерам
+printlogsForm.addEventListener('submit', event => {
+    event.preventDefault();
+    activeInput = inputTextPrinters;
+    if (activeInput.value) {
+        console.log(activeInput.value);
+        activeInput.style.borderColor = '';
+        prevDiv.classList.remove('show');
+        reloadDiv.classList.add('show');
+        apiURL = constants.API_PRINT_LOGS + `${printersSelect.value}=${activeInput.value}%&`; 
+        createItemsRow = createPrintersRow;
+        tableHeader = constants.TABLE_HEADER_PRINT_LOGS;
+        error.innerHTML = '';
+        buildPagination()
+        .then( ({items}) => {
+            if(!items.length){
+                tableBody.textContent = '';
+                pagContainer.textContent = '';
+                error.innerHTML = `<p class='error'>По запросу нет данных</p>`;
+            }
+        })
+        activeInput.value = '';
+    } else {
+        activeInput.style.borderColor = 'red';
+    }
+})
+
 const renderAutocomplete = (dataItems, input) => {
     dataMatch = dataItems.filter(item => item.toLowerCase().startsWith(input.value.toLowerCase()));
     let itemsString = '';
@@ -472,13 +512,13 @@ const cartridgesFormHandler = ({currentTarget}) => {
     } else {
         let dataItems = []; 
         if( select.value === 'fio' ){
-            dataItems = dataNames;
+            dataItems = dataNames.sort();
         }
         if( select.value === 'model' ){
-            dataItems = dataCartridges;
+            dataItems = dataCartridges.sort();
         }
         autoComplete.innerHTML = renderAutocomplete(dataItems, currentTarget);
-        idx = -1;
+        idxAutocomplete = -1;
     }
 }
 
@@ -488,13 +528,13 @@ const printersFormHandler = ({currentTarget}) => {
     } else {
         let dataItems = []; 
         if( printersSelect.value === 'hostname' ){
-            dataItems = dataHostnames;
+            dataItems = dataHostnames.sort();
         }
-        // if( printersSelect.value === 'model' ){
-        //     dataItems = dataCartridges;
-        // }
+        if( printersSelect.value === 'description' ){
+            dataItems = dataDepartments.sort();
+        }
         autoComplete.innerHTML = renderAutocomplete(dataItems, currentTarget);
-        idx = -1;
+        idxAutocomplete = -1;
     }
 }
 //События при вводе символов в инпут и выводе li-шек с подсказками
@@ -502,7 +542,7 @@ inputText.addEventListener("input", cartridgesFormHandler);
 
 inputTextPrinters.addEventListener('input', printersFormHandler);
 
-//События для работы с кнопками
+//===================================События для работы с кнопками=========================================
 
 //Событие для обработки нажатия по кнопке "назад"
 prevDiv.addEventListener('click', () => {
@@ -539,6 +579,8 @@ autoComplete.addEventListener( 'click', event => {
 //Вещаем событие на thead для сортировки полей
 document.querySelectorAll('.data-table thead').forEach(tableTH => tableTH.addEventListener('click', () => getSort(event)));
 
+
+//Устанавливаем на движение мыши и нажатие по клавишам, функцию задающую таймстамп текущего времени
 document.body.addEventListener('mousemove', setCurrentTime);
 document.body.addEventListener('keydown', setCurrentTime);
 
@@ -578,32 +620,6 @@ btnPrintlogs.addEventListener('click', event => {
     buildPagination();
 });
 
-//Обработка формы для статистики по принтерам
-printlogsForm.addEventListener('submit', event => {
-    event.preventDefault();
-    if (inputTextPrinters.value) {
-        inputTextPrinters.style.borderColor = '';
-        activeInput = inputTextPrinters;
-        prevDiv.classList.remove('show');
-        reloadDiv.classList.add('show');
-        apiURL = constants.API_PRINT_LOGS + `${printersSelect.value}=${inputTextPrinters.value}&`; 
-        createItemsRow = createPrintersRow;
-        tableHeader = constants.TABLE_HEADER_PRINT_LOGS;
-        error.innerHTML = '';
-        buildPagination()
-        .then( ({items}) => {
-            if(!items.length){
-                tableBody.textContent = '';
-                pagContainer.textContent = '';
-                error.innerHTML = `<p class='error'>По запросу нет данных</p>`;
-            }
-        })
-        inputTextPrinters.value = '';
-    } else {
-        inputTextPrinters.style.borderColor = 'red';
-    }
-})
-
 //Отображения страницы с принтерами Доставки
 btnDelivery.addEventListener('click', event => {
     event.preventDefault();
@@ -632,15 +648,13 @@ saveItemsArray(constants.API_USERS, getAllUsers).then( items => dataNames = item
 saveItemsArray(constants.API_CARTRIDGES, getAllCartridges).then( items => dataCartridges = items );
 
 //Получение всех хостов
-saveItemsArray(constants.API_PRINT_LOGS, getAllHostnames).then( items => dataHostnames = items );
+saveItemsArray(constants.API_ALL_PRINT_LOGS, getAllHostnames).then( items => dataHostnames = items );
 
-//Каждые 10 минут переполучаем данные из БД
-setInterval( () => {
-    if( new Date().getTime() - time >= 600000 ){
-        resetAll();
-        buildPagination();
-    }
-}, 180000)
+//Получение всех отделов
+saveItemsArray(constants.API_ALL_PRINT_LOGS, getAllDepartment).then( items => dataDepartments = items );
 
 //Первоначальное отображение
 buildPagination();
+
+//Задаем таймер в минуту для обновления данных через 5 минут
+setTimeout( refresh, 60000);
