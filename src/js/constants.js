@@ -4,6 +4,7 @@ const constants = {
     API_CART_LOGS: 'http://10.1.1.141:8080/api/cartlogs/journal?',
     API_PRINT_LOGS: 'http://10.1.1.141:8080/api/printlogs/prints?',
     API_USERS: 'http://10.1.1.141:8080/api/cartlogs/users',
+    API_ALL_PRINT_LOGS: 'http://10.1.1.141:8080/api/printlogs/prints?without_pagination=y',
     API_PRINT_DELiVERY: 'http://10.1.1.141:8080/api/printlogs/prints?description=Доставка&',
     API_STATISTICS: 'http://10.1.1.141:8080/api/cartlogs/carts?',
     API_CARTRIDGES: 'http://10.1.1.141:8080/api/cartlogs/carts?without_pagination=1',
