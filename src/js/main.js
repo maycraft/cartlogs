@@ -70,13 +70,13 @@ const createPrintersRow = (operation, idx) => {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td class="align">${idx + 1}</td>
-            <td>${operation.description}</td>
             <td>${operation.type}</td>
             <td>${operation.model}</td>
+            <td><a class="print-link" href="http://${operation.ip}" target="_blank">${operation.hostname}</td>
             <td>${getDate(operation.ftime)}</td>
             <td>${getDate(operation.ltime)}</td>
             <td>${operation.inv}</td>
-            <td><a class="print-link" href="http://${operation.ip}" target="_blank">${operation.hostname}</td>
+            <td>${operation.description}</td>
             <td>${operation.total}</td>
         `;
         tableBody.append(row);
@@ -422,7 +422,6 @@ const changeForm = (form, header) => {
 //Обновление данных с базы каждые 5 минут
 const refresh = () => {
     if( new Date().getTime() - time >= 300000 ){
-        console.log('refresh', new Date().toTimeString());
         resetAll();
         buildPagination();
     }
@@ -446,7 +445,6 @@ searchForm.addEventListener('submit', event => {
     const status = statValue;
 
     if (activeInput.value) {
-        console.log(activeInput.value);
         activeInput.style.borderColor = ''; //убираем красную границу
         prevDiv.classList.add('show'); //выводим кнопку назад
         preloader.classList.add('show');
@@ -472,9 +470,8 @@ searchForm.addEventListener('submit', event => {
 //Обработка формы для статистики по принтерам
 printlogsForm.addEventListener('submit', event => {
     event.preventDefault();
-    activeInput = inputTextPrinters;
+
     if (activeInput.value) {
-        console.log(activeInput.value);
         activeInput.style.borderColor = '';
         prevDiv.classList.remove('show');
         reloadDiv.classList.add('show');
@@ -613,7 +610,7 @@ btnPrintlogs.addEventListener('click', event => {
     changeForm(printersForm, 'Статистика принтеров');
     title.text = 'Статистика Принтеров';
     preloader.classList.add('show');
-
+    activeInput = inputTextPrinters;
     apiURL = constants.API_PRINT_LOGS;
     tableHeader = constants.TABLE_HEADER_PRINT_LOGS;
     createItemsRow  = createPrintersRow;

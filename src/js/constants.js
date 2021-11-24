@@ -22,13 +22,13 @@ const constants = {
     
     TABLE_HEADER_PRINT_LOGS: `<tr>
                                     <th>№</th>
-                                    <th>Отдел</th>
                                     <th>Устройство</th>
                                     <th>Модель</th>
+                                    <th>Имя Хоста</th>
                                     <th>Дата начала работы</th>
                                     <th>Дата последних данных</th>
                                     <th>Инв. номер</th>
-                                    <th>Имя Хоста</th>
+                                    <th>Описание</th>
                                     <th>Всего</th>
                                 </tr>`,
     
