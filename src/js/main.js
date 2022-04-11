@@ -152,6 +152,9 @@ const showTable = (data, currentPage, tableHeaders, createItemsRow, linesCount) 
 
     tableBody.textContent = '';     
     for (let i = 0, j = head; i < data.length; i++, j++) {
+        if(data[i].ip && data[i].ip.startsWith('10.17')){
+            continue;
+        }
         createItemsRow(data[i], j);
     }
 }
@@ -364,13 +367,18 @@ const getAllCartridges = ({items}) => {
 //Получение всех хостнеймов принтеров
 const getAllHostnames = ({items}) => {
     const set = new Set();
-    items.forEach(item => set.add(item.hostname))
+    items.forEach(item => {
+        set.add(item.hostname)
+    })
     return Array.from(set);
 }
 
 const getAllDepartment = ({items}) => {
     const set = new Set();
-    items.forEach( item => set.add( item.description.split(' -')[0]));
+    items.forEach( item => {
+        if(item.ip.startsWith('10.17'))return;
+        set.add( item.description.split(' -')[0])
+    });
     return Array.from(set);
 }
 
